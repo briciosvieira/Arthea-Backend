@@ -1,18 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { DoctorCreateDto } from './dto/doctor.create.dto';
+import * as fs from 'fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import * as fs from 'fs/promises';
-import { DoctorUpdateDto } from './dto/doctor.update.dto';
 import { PaginationDto } from '../commom/pagination';
+import { PrismaService } from '../prisma/prisma.service';
+import { DoctorCreateDto } from './dto/doctor.create.dto';
+import { DoctorUpdateDto } from './dto/doctor.update.dto';
 
 @Injectable()
 export class DoctorService {
 
     constructor(private prisma: PrismaService) { }
 
-    async create(doctorCreateDto: DoctorCreateDto, photoUrl: string) {
+    async create(doctorCreateDto: DoctorCreateDto, photoUrl: string | undefined) {
         try {
             const doctor = await this.prisma.doctor.create({
                 data: {
@@ -20,8 +20,8 @@ export class DoctorService {
                     crm: doctorCreateDto.crm,
                     specialty: doctorCreateDto.specialty,
                     about: doctorCreateDto.about,
-                    active: doctorCreateDto.active,
-                    photoUrl: photoUrl || null,
+                    active: true,
+                    photoUrl: photoUrl,
                     hiredAt: new Date()
                 }
             })
@@ -68,15 +68,27 @@ export class DoctorService {
     }
 
     async update(id: string, doctor: DoctorUpdateDto, photoUrl?: string) {
-
         try {
             const doctorId = await this.prisma.doctor.findFirst({
                 where: {
                     id: id
                 }
-            })
+            });
 
             if (!doctorId) return "Médico não encontrado";
+
+            // Se houver foto nova, deleta a antiga
+            if (photoUrl && doctorId.photoUrl) {
+                try {
+                    const oldPhotoPath = path.resolve(
+                        process.cwd(),
+                        doctorId.photoUrl.replace('/files/', 'files/')
+                    );
+                    await fs.unlink(oldPhotoPath);
+                } catch (err) {
+                    console.log('Erro ao deletar foto antiga:', err);
+                }
+            }
 
             const dataToUpdate: any = {};
 
@@ -96,50 +108,47 @@ export class DoctorService {
 
             return update;
         } catch (error) {
-            throw new HttpException('Erro no servidor ao atualizar Médico, contacte o administrador',
-                HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    async delete(id: string) {
-        try {
-            const doctor = await this.prisma.doctor.findFirst({
-                where: {
-                    id: id
-                }
-            });
-
-            if (!doctor) return 'Doutor não encontrado';
-
-            if (doctor.photoUrl) {
-                try {
-                    const photoPath = path.resolve(process.cwd(), 
-                    doctor.photoUrl.replace('/files/', 'files/'));
-                    console.log("photoPath:", photoPath)
-                    await fs.unlink(photoPath);
-
-                } catch (err) {
-                    throw new HttpException(
-                        'Erro ao deletar Médico, contacte o administrador',
-                        HttpStatus.BAD_REQUEST
-                    );
-                }
-            }
-
-            const deleteDoctor = await this.prisma.doctor.delete({
-                where: {
-                    id: doctor.id
-                }
-            });
-
-            return `Doutor ${deleteDoctor.name} de CRM: ${deleteDoctor.crm} deletado com sucesso`;
-        } catch (error) {
             throw new HttpException(
-                'Erro no servidor ao deletar Médico, contacte o administrador',
+                'Erro no servidor ao atualizar Médico, contacte o administrador',
                 HttpStatus.BAD_REQUEST
             );
         }
     }
+
+    async delete(id: string) {
+    try {
+        const doctor = await this.prisma.doctor.findFirst({
+            where: { id }
+        });
+
+        if (!doctor) return 'Doutor não encontrado';
+
+        if (doctor.photoUrl) {
+            try {
+                const photoPath = path.resolve(
+                    process.cwd(),
+                    doctor.photoUrl.replace('/files/', 'files/')
+                );
+                await fs.unlink(photoPath);
+                console.log('Foto deletada:', photoPath);
+            } catch (err) {
+                console.log('Erro ao deletar foto (foto pode não existir):', err.message);
+            }
+        }
+
+        const deleteDoctor = await this.prisma.doctor.delete({
+            where: { id: doctor.id }
+        });
+
+        return `Doutor ${deleteDoctor.name} de CRM: ${deleteDoctor.crm} deletado com sucesso`;
+    } catch (error) {
+        console.error('Erro real:', error); 
+        throw new HttpException(
+            'Erro no servidor ao deletar Médico, contacte o administrador',
+            HttpStatus.BAD_REQUEST
+        );
+    }
+}
 
 
     async findAll(pagination?: PaginationDto) {
