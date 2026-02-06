@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate {
                 this.jwtConfiguration)
             request[REQUEST_TOKEN_PAYLOAD] = payload;
 
-            const user = this.prismaService.user.findFirst({
+            const user = await this.prismaService.user.findFirst({
                 where: {
                     id: payload?.sub,
                     active: true
@@ -43,7 +43,7 @@ export class AuthGuard implements CanActivate {
                 throw new UnauthorizedException('Usuário inválido ou inativo');
             }
 
-            request.user = await user;
+            request.user = user;
             return true
         } catch (error) {
             throw new UnauthorizedException('Token inválido ou expirado');
@@ -59,7 +59,7 @@ export class AuthGuard implements CanActivate {
         }
         const authorization = request.headers['authorization'];
         if (!authorization || typeof authorization !== "string") {
-           
+
             return;
         }
         return authorization.split(' ')[1];

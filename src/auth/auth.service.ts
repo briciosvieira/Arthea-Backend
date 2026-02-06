@@ -12,7 +12,7 @@ export class AuthService {
 
     constructor(private prismaService: PrismaService,
         private readonly hashService: HashingServiceProtocol,
-        
+
 
         @Inject(jwtConfig.KEY)
         private readonly jwtConfiguration: config.ConfigType<typeof jwtConfig>,
@@ -42,18 +42,18 @@ export class AuthService {
             throw new HttpException('Senha inválida', HttpStatus.UNAUTHORIZED);
         }
 
-        const token = await this.jwtService.signAsync(
-            {
-                sub: user.id,
-                name: user.name,
-            },
-            {
-                secret: this.jwtConfiguration.secret,
-                expiresIn: this.jwtConfiguration.jwtTtl,
-                audience: this.jwtConfiguration.audience,
-                issuer: this.jwtConfiguration.issuer
-            }
-        );
+        const payload: Record<string, any> = {
+            sub: user.id,
+            name: user.name,
+            role: user.role
+        }
+
+        const token = await this.jwtService.signAsync(payload, {
+            secret: this.jwtConfiguration.secret,
+            expiresIn: this.jwtConfiguration.jwtTtl,
+            audience: this.jwtConfiguration.audience,
+            issuer: this.jwtConfiguration.issuer
+        });
 
         return { token: token };
     }

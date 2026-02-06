@@ -50,7 +50,7 @@ export class UserService {
 
     async findAll(pagination?: PaginationDto) {
         try {
-            
+
             const limit = pagination?.limit ? Number(pagination.limit) : undefined;
             const offset = pagination?.offset ? Number(pagination.offset) : undefined;
 
@@ -115,10 +115,6 @@ export class UserService {
 
             if (!userId) {
                 throw new HttpException("Usuário não existe", HttpStatus.NOT_FOUND)
-            }
-
-            if (userId.role === 'USER') {
-                throw new HttpException('Você não pode atualizar um colaborador, solicite ao administrador', HttpStatus.FORBIDDEN);
             }
 
             if (updateDto?.password) {

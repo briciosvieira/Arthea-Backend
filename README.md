@@ -74,14 +74,16 @@ $ npm install class-validator class-transformer
 
 $ npm install prisma --save-dev
 $ npm install @prisma/client
+$ npx prisma generate
 
 $ npx prisma init
 
 $ npm install bcrypt
 $ npm install --save-dev @types/bcrypt
 
-$ npm install --save @nestjs/jwt
-$ npm install @nestjs/config
+$ npm install @nestjs/jwt@10.2.0 jsonwebtoken@9.0.2 --force
+$ npm install @nestjs/config@3.2.3
+
 
 $ npm install @nestjs/mapped-types
 
