@@ -1,7 +1,6 @@
-import { Body, Controller, Delete, Get, Param, ParseFilePipeBuilder, Post, Put, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseFilePipeBuilder, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Roles } from '../auth/role/role.decorator';
-import { Role } from '../auth/role/roles.enum';
+import { AuthGuard } from '../auth/guard/auth.guard';
 import { DoctorService } from './doctor.service';
 import { DoctorCreateDto } from './dto/doctor.create.dto';
 import { DoctorUpdateDto } from './dto/doctor.update.dto';
@@ -14,8 +13,8 @@ export class DoctorController {
         private service: DoctorService,
     ) { }
 
+    @UseGuards(AuthGuard)
     @Post()
-    @Roles(Role.ADMIN, Role.USER)
     @UseInterceptors(FileInterceptor('photo'))
     async create(
         @Body() doctorCreateDto: DoctorCreateDto,
@@ -36,8 +35,8 @@ export class DoctorController {
         return this.service.create(doctorCreateDto, photoUrl);
     }
 
+    @UseGuards(AuthGuard)
     @Post('upload')
-    @Roles(Role.ADMIN, Role.USER)
     @UseInterceptors(FileInterceptor('photo'))
     async uploadAvatar(
         @UploadedFile(
@@ -51,8 +50,8 @@ export class DoctorController {
         return this.service.uploadAvatar(file);
     }
 
+    @UseGuards(AuthGuard)
     @Put(':id')
-    @Roles(Role.ADMIN, Role.USER)
     @UseInterceptors(FileInterceptor('photo'))
     async update(
         @Param('id') id: string,
@@ -78,8 +77,8 @@ export class DoctorController {
         return this.service.update(id, doctorUpdateDto, photoUrl);
     }
 
+    @UseGuards(AuthGuard)
     @Delete(':id')
-    @Roles(Role.ADMIN, Role.USER)
     delete(@Param('id') id: string) {
         return this.service.delete(id);
     }
