@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+.env.*
+*.log
+.git
+.gitignore
+coverage
+test
+
+# arquivos de upload (montados como volume no compose)
+files
+uploads

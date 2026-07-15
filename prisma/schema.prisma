@@ -67,3 +67,66 @@ model Appointment {
 
   @@index([doctorId, startAt])
 }
+
+enum HeroType {
+  VIDEO
+  IMAGE
+}
+
+enum SliderSection {
+  RECEPCAO
+  CONSULTORIO
+}
+
+model HeroMedia {
+  id        String   @id @default(uuid())
+  type      HeroType @default(VIDEO)
+  videoPath String?
+  imagePath String?
+  updatedAt DateTime @updatedAt
+}
+
+model SliderImage {
+  id        String        @id @default(uuid())
+  section   SliderSection
+  filePath  String
+  active    Boolean       @default(true)
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model QuemSomosImage {
+  id        String   @id @default(uuid())
+  position  Int      @unique
+  filePath  String
+  updatedAt DateTime @updatedAt
+}
+
+model Specialty {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String   @db.VarChar(80)
+  createdAt   DateTime @default(now())
+}
+
+enum SocialType {
+  FACEBOOK
+  INSTAGRAM
+  LINKEDIN
+  WHATSAPP
+  YOUTUBE
+  TIKTOK
+  TWITTER
+  ADDRESS
+  OTHER
+}
+
+model SocialLink {
+  id        String     @id @default(uuid())
+  type      SocialType
+  label     String?
+  value     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}

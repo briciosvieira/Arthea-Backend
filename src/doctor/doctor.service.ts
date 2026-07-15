@@ -152,41 +152,54 @@ export class DoctorService {
 
 
     async findAll(pagination?: PaginationDto) {
-
         try {
             const limit = pagination?.limit ? Number(pagination.limit) : undefined;
             const offset = pagination?.offset ? Number(pagination.offset) : undefined;
 
-            const [doctor, total] = await Promise.all([
+            const [doctors, total] = await Promise.all([
                 this.prisma.doctor.findMany({
                     skip: offset,
                     take: limit,
-                    select: {
-                        id: true,
-                        name: true,
-                        active: true,
-                        createdAt: true,
-                        about: true,
-                        crm: true,
-                        hiredAt: true,
-                        photoUrl: true,
-                        specialty: true,
-                        updatedAt: true,
-                        appointments: true
-                    },
+                    select: doctorSelect,
+                    orderBy: { name: 'asc' },
                 }),
                 this.prisma.doctor.count(),
             ]);
 
             return {
-                doctor,
+                doctor: doctors,
                 total,
                 totalPages: limit ? Math.ceil(total / limit) : 1,
                 page: offset && limit ? Math.floor(offset / limit) + 1 : 1,
             };
-
         } catch (error) {
-            throw new HttpException("Ops, algo deu errado", HttpStatus.BAD_REQUEST);
+            throw new HttpException('Ops, algo deu errado', HttpStatus.BAD_REQUEST);
         }
     }
+
+    async findOne(id: string) {
+        const doctor = await this.prisma.doctor.findFirst({
+            where: { id },
+            select: doctorSelect,
+        });
+
+        if (!doctor) {
+            throw new HttpException('Médico não encontrado', HttpStatus.NOT_FOUND);
+        }
+
+        return doctor;
+    }
 }
+
+const doctorSelect = {
+    id: true,
+    name: true,
+    crm: true,
+    specialty: true,
+    about: true,
+    photoUrl: true,
+    active: true,
+    hiredAt: true,
+    createdAt: true,
+    updatedAt: true,
+} as const;

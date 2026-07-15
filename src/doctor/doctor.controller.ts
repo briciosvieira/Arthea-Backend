@@ -85,8 +85,12 @@ export class DoctorController {
     }
 
     @Get()
-    @Roles(Role.ADMIN, Role.USER)
     findAll(@Query() pagination?: PaginationDto) {
         return this.service.findAll(pagination);
+    }
+
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.service.findOne(id);
     }
 }
