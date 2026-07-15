@@ -2,35 +2,56 @@ name: consultorio_backend
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
+
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # PostgreSQL 18
+      - pgdata:/var/lib/postgresql
+
+      # Backup existente no servidor, somente para leitura
+      - /home/backup:/backup:ro
+
     ports:
-      - "${DB_PORT}:5432"
+      # Banco disponível somente dentro do próprio servidor.
+      # Não fica exposto diretamente na internet.
+      - "127.0.0.1:${DB_PORT}:5432"
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER} -d ${DB_NAME}"
+        ]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+
     restart: unless-stopped
+    init: true
+
     ports:
-      - "${PORT:-3000}:3000"
+      # Depois o Nginx apontará para essa porta
+      - "127.0.0.1:${PORT:-3000}:3000"
+
     depends_on:
       db:
         condition: service_healthy
+
     env_file:
       - .env
+
     environment:
-      # Sobrescreve DATABASE_URL do .env: troca localhost pelo serviço "db" do Docker
-      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?schema=public"
       NODE_ENV: production
 
     volumes:
