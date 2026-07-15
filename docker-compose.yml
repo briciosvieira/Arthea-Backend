@@ -1,3 +1,5 @@
+name: consultorio_backend
+
 services:
   db:
     image: postgres:16-alpine
