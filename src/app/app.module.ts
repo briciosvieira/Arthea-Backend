@@ -22,6 +22,11 @@ import { AppService } from './app.service';
       {
         rootPath: join(__dirname, '..', '..', 'uploads'),
         serveRoot: '/uploads',
+        serveStaticOptions: {
+          setHeaders(res: any) {
+            res.setHeader('Accept-Ranges', 'bytes');
+          },
+        },
       },
     ),
     ConfigModule.forRoot(),

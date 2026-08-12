@@ -33,8 +33,9 @@ export class MediaService {
   }
 
   async uploadHeroVideo(file: Express.Multer.File) {
-    if (file.mimetype !== 'video/mp4') {
-      throw new BadRequestException('Apenas arquivos MP4 são aceitos.');
+    const allowedVideoMimes = ['video/mp4', 'video/quicktime'];
+    if (!allowedVideoMimes.includes(file.mimetype)) {
+      throw new BadRequestException('Apenas arquivos MP4 ou MOV são aceitos.');
     }
     const ext = path.extname(file.originalname).toLowerCase() || '.mp4';
     const filename = `${randomUUID()}${ext}`;
